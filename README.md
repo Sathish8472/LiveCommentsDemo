@@ -44,11 +44,6 @@ In-Memory Comment Storage -------------------> Stores and retrieves comments
 
 ## Setup & Run
 
-### Prerequisites
-
-- [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)  
-- Modern browser (Chrome, Edge, Firefox)
-
 ### Steps
 
 1. Clone the repository:
@@ -67,12 +62,12 @@ Run the project:
 dotnet run
 
 
-Open browser at https://localhost:5001 (or the URL shown in console).
+### Open browser at https://localhost:5001 (or the URL shown in console).
 
-Open multiple tabs to simulate multiple viewers. Enter a username and a comment → click Send. Comments appear in all tabs instantly.
+### Open multiple tabs to simulate multiple viewers. Enter a username and a comment → click Send. Comments appear in all tabs instantly.
 
 
-Usage
+### Usage
 
 Each comment is timestamped on the server.
 
