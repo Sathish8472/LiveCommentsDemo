@@ -1,0 +1,36 @@
+﻿@{
+    ViewData["Title"] = "Live Comments Demo";
+}
+
+<h2>Live Comments</h2>
+
+<div>
+    <input type="text" id="userInput" placeholder="Your name" />
+    <input type="text" id="messageInput" placeholder="Type a comment..." />
+    <button id="sendButton">Send</button>
+</div>
+
+<ul id="messagesList"></ul>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
+<script>
+    const connection = new signalR.HubConnectionBuilder()
+        .withUrl("/commentsHub")
+        .build();
+
+    connection.on("ReceiveComment", function (comment) {
+        const li = document.createElement("li");
+        li.textContent = `[${new Date(comment.timestamp).toLocaleTimeString()}] ${comment.user}: ${comment.message}`;
+        document.getElementById("messagesList").appendChild(li);
+    });
+
+    connection.start().catch(err => console.error(err.toString()));
+
+    document.getElementById("sendButton").addEventListener("click", function (event) {
+        const user = document.getElementById("userInput").value;
+        const message = document.getElementById("messageInput").value;
+        connection.invoke("SendComment", user, message).catch(err => console.error(err.toString()));
+        document.getElementById("messageInput").value = "";
+        event.preventDefault();
+    });
+</script>
