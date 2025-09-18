@@ -14,11 +14,27 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
 <script>
+    // For Long Polling transport
+    // const connection = new signalR.HubConnectionBuilder()
+    // .withUrl("/commentsHub", {
+    //     transport: signalR.HttpTransportType.LongPolling
+    // })
+    // .build();
+
+    // // For Server-Sent Events (SSE) transport
+    // const connection = new signalR.HubConnectionBuilder()
+    // .withUrl("/commentsHub", {
+    //     transport: signalR.HttpTransportType.ServerSentEvents
+    // })
+    // .build();
+
+    // For WebSockets transport (default if available)
     const connection = new signalR.HubConnectionBuilder()
         .withUrl("/commentsHub")
         .build();
 
     connection.on("ReceiveComment", function (comment) {
+        console.log("Received at: " + new Date().toISOString());
         const li = document.createElement("li");
         li.textContent = `[${new Date(comment.timestamp).toLocaleTimeString()}] ${comment.user}: ${comment.message}`;
         document.getElementById("messagesList").appendChild(li);
