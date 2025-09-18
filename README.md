@@ -4,6 +4,9 @@ A mini live comments demo built with **ASP.NET Core MVC** and **SignalR**, demon
 
 ---
 
+## Screenshot of the result demo
+![Live Comments Demo Screenshot](docs/screenshot.png)
+
 ## Features
 
 - Post and broadcast comments in **real-time**.  
