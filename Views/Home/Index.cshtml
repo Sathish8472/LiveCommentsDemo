@@ -5,48 +5,92 @@
 <h2>Live Comments</h2>
 
 <div>
+    <label for="roomSelect">Select Live Video:</label>
+    <select id="roomSelect">
+        <option value="video1">Live Video 1</option>
+        <option value="video2">Live Video 2</option>
+        <option value="video3">Live Video 3</option>
+    </select>
+</div>
+
+<div>
+    <label for="transportSelect">Transport:</label>
+    <select id="transportSelect">
+        <option value="websocket">WebSocket</option>
+        <option value="sse">SSE</option>
+        <option value="longpolling">Long Polling</option>
+    </select>
+</div>
+
+<div style="margin-top: 10px;">
     <input type="text" id="userInput" placeholder="Your name" />
     <input type="text" id="messageInput" placeholder="Type a comment..." />
     <button id="sendButton">Send</button>
 </div>
 
-<ul id="messagesList"></ul>
+<ul id="messagesList" style="margin-top: 20px;"></ul>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
 <script>
-    // For Long Polling transport
-    // const connection = new signalR.HubConnectionBuilder()
-    // .withUrl("/commentsHub", {
-    //     transport: signalR.HttpTransportType.LongPolling
-    // })
-    // .build();
+    // Select transport dynamically
+    const transportType = document.getElementById("transportSelect").value;
+    let transport;
+    if (transportType === "websocket") transport = signalR.HttpTransportType.WebSockets;
+    else if (transportType === "sse") transport = signalR.HttpTransportType.ServerSentEvents;
+    else transport = signalR.HttpTransportType.LongPolling;
 
-    // // For Server-Sent Events (SSE) transport
-    // const connection = new signalR.HubConnectionBuilder()
-    // .withUrl("/commentsHub", {
-    //     transport: signalR.HttpTransportType.ServerSentEvents
-    // })
-    // .build();
-
-    // For WebSockets transport (default if available)
     const connection = new signalR.HubConnectionBuilder()
-        .withUrl("/commentsHub")
+        .withUrl("/commentsHub", { transport: transport })
         .build();
 
+    // Receive new comment from server
     connection.on("ReceiveComment", function (comment) {
-        console.log("Received at: " + new Date().toISOString());
+        const latency = Date.now() - new Date(comment.timestamp).getTime();
+        console.log(`Received "${comment.message}" in ${latency}ms`);
+
         const li = document.createElement("li");
         li.textContent = `[${new Date(comment.timestamp).toLocaleTimeString()}] ${comment.user}: ${comment.message}`;
         document.getElementById("messagesList").appendChild(li);
     });
 
-    connection.start().catch(err => console.error(err.toString()));
+    // Receive historical comments when joining a room
+    connection.on("LoadHistory", function (comments) {
+        const messagesList = document.getElementById("messagesList");
+        messagesList.innerHTML = ""; // Clear existing messages
 
+        comments.forEach(comment => {
+            const li = document.createElement("li");
+            li.textContent = `[${new Date(comment.timestamp).toLocaleTimeString()}] ${comment.user}: ${comment.message}`;
+            messagesList.appendChild(li);
+        });
+    });
+
+    // Start connection and join selected room
+    connection.start().then(() => {
+        const selectedRoom = document.getElementById("roomSelect").value;
+        connection.invoke("JoinRoom", selectedRoom)
+            .catch(err => console.error(err.toString()));
+    }).catch(err => console.error(err.toString()));
+
+    // Send comment to server
     document.getElementById("sendButton").addEventListener("click", function (event) {
         const user = document.getElementById("userInput").value;
         const message = document.getElementById("messageInput").value;
-        connection.invoke("SendComment", user, message).catch(err => console.error(err.toString()));
+        const selectedRoom = document.getElementById("roomSelect").value;
+
+        connection.invoke("SendComment", selectedRoom, user, message)
+            .catch(err => console.error(err.toString()));
+
         document.getElementById("messageInput").value = "";
         event.preventDefault();
+    });
+
+    document.getElementById("transportSelect").addEventListener("change", function () {
+        location.reload();
+    });
+
+    document.getElementById("roomSelect").addEventListener("change", function () {
+        const selectedRoom = document.getElementById("roomSelect").value;
+        connection.invoke("JoinRoom", selectedRoom).catch(err => console.error(err.toString()));
     });
 </script>
